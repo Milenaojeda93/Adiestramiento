@@ -67,7 +67,7 @@ async function main() {
           createdBy: user.id,
         })),
       );
-      console.log(`Empresa demo creada. Ingresá con ${email} / ${password}`);
+      console.log(`Empresa demo creada. Ingresá con ${email}${process.env.DEMO_PASSWORD ? ' y la contraseña de DEMO_PASSWORD' : ' / ' + password}`);
     }
   }
 
