@@ -23,13 +23,18 @@ export class AuthGuard implements CanActivate {
     @Inject(CONFIG) private readonly cfg: AppConfig,
   ) {}
 
+  /** WEB_ORIGIN admite varios orígenes separados por coma (ej. dominio propio + dominio de Vercel). */
+  private get allowedOrigins() {
+    return this.cfg.WEB_ORIGIN.split(',').map((o) => o.trim().replace(/\/$/, ''));
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<AuthedRequest>();
     const meta = <T>(key: string) => this.reflector.getAllAndOverride<T>(key, [context.getHandler(), context.getClass()]);
 
     if (!SAFE_METHODS.has(req.method)) {
       const origin = req.headers.origin;
-      if (origin && origin !== this.cfg.WEB_ORIGIN) {
+      if (origin && !this.allowedOrigins.includes(origin)) {
         throw new AppError(403, 'BAD_ORIGIN', 'Origen no permitido');
       }
     }

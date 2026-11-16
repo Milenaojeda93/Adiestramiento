@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @adiestra/shared build && pnpm --filter @adiestra/db build && pnpm --filter @adiestra/api build && node packages/db/dist/migrate.js && node packages/db/dist/seed.js --demo",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.js": { "maxDuration": 30, "includeFiles": "dist/**" }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
+}

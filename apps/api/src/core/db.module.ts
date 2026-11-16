@@ -17,8 +17,8 @@ const POOLS = Symbol('POOLS');
       provide: POOLS,
       inject: [CONFIG],
       useFactory: (cfg: AppConfig) => ({
-        system: createDb(cfg.DATABASE_URL_OWNER, 5),
-        app: createDb(cfg.DATABASE_URL_APP, 15),
+        system: createDb(cfg.DATABASE_URL_OWNER, Math.max(1, Math.floor(cfg.PG_POOL_MAX / 2))),
+        app: createDb(cfg.DATABASE_URL_APP, cfg.PG_POOL_MAX),
       }),
     },
     { provide: SYSTEM_DB, inject: [POOLS], useFactory: (p: { system: { db: Db } }) => p.system.db },

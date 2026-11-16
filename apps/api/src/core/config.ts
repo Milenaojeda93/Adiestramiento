@@ -7,11 +7,13 @@ const schema = z.object({
   DATABASE_URL_OWNER: z.string().url(),
   /** Rol de la aplicación: toda la operación de las empresas. Sujeto a RLS. */
   DATABASE_URL_APP: z.string().url(),
-  /** Origen permitido para operaciones que modifican datos (protección CSRF). */
+  /** Orígenes permitidos para operaciones que modifican datos (protección CSRF), separados por coma. */
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   SESSION_DAYS: z.coerce.number().int().min(1).max(90).default(7),
   /** Días de gracia tras vencer la prueba o el pago, antes de pasar a solo lectura. */
   GRACE_DAYS: z.coerce.number().int().min(0).max(60).default(5),
+  /** Conexiones por instancia. En Vercel (funciones) conviene 1–3: el pooler de Supabase hace el resto. */
+  PG_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
 });
 
 export type AppConfig = z.infer<typeof schema>;
