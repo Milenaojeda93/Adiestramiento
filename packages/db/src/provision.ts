@@ -1,8 +1,8 @@
 import { hash } from '@node-rs/argon2';
-import { BASE_ROLES } from '@adiestra/shared';
+import { BASE_ROLES, DEFAULT_SKILLS } from '@adiestra/shared';
 import { eq } from 'drizzle-orm';
 import type { Db } from './index';
-import { branches, features, memberships, organizations, planFeatures, plans, roles, subscriptions, users } from './schema';
+import { branches, features, memberships, organizations, planFeatures, plans, roles, skills, subscriptions, users } from './schema';
 
 /** Parámetros de argon2id (OWASP 2024: m=19 MiB, t=2, p=1). */
 export const ARGON2_OPTIONS = { memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
@@ -164,6 +164,8 @@ export async function provisionOrganization(db: Db, input: ProvisionInput) {
       .returning({ id: users.id, email: users.email, name: users.name });
 
     await tx.insert(memberships).values({ organizationId: org.id, userId: user.id, roleId: adminRole.id });
+
+    await tx.insert(skills).values(DEFAULT_SKILLS.map((name, i) => ({ organizationId: org.id, name, sortOrder: i })));
 
     return { organization: org, user, branch, roles: createdRoles };
   });

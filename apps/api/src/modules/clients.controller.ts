@@ -4,6 +4,7 @@ import { clientSchema, clientUpdateSchema, listQuerySchema } from '@adiestra/sha
 import { and, desc, eq, ilike, isNull, lt, or, SQL, sql } from 'drizzle-orm';
 import { Ctx, RequestContext, RequirePermissions } from '../core/context';
 import { notFound } from '../core/errors';
+import { ownClientsCondition } from '../core/scope';
 import { TenantService } from '../core/tenant.service';
 import { parse } from '../core/zod';
 
@@ -11,9 +12,7 @@ import { parse } from '../core/zod';
  * Clientes / propietarios.
  * Ninguna consulta filtra por organization_id a mano: lo hace PostgreSQL vía RLS
  * dentro de TenantService.run. Los filtros de acá son solo de negocio.
- *
- * Pendiente Sprint 2: el rol Entrenador (scopeOwn) verá solo los clientes de sus
- * mascotas asignadas, cuando existan mascotas y programas.
+ * El rol Entrenador (scopeOwn) ve solo los clientes de sus mascotas asignadas.
  */
 @Controller('clients')
 export class ClientsController {
@@ -25,6 +24,8 @@ export class ClientsController {
     const q = parse(listQuerySchema, query);
     return this.tenant.run(ctx, async (tx) => {
       const where: SQL[] = [isNull(clients.deletedAt)];
+      const scope = ownClientsCondition(ctx, clients.id);
+      if (scope) where.push(scope);
       if (q.status !== 'ALL') where.push(eq(clients.status, q.status));
       if (q.search) {
         const term = `%${q.search.replace(/[%_\\]/g, (c) => '\\' + c)}%`;
@@ -65,7 +66,10 @@ export class ClientsController {
   @RequirePermissions('clients:read')
   async get(@Ctx() ctx: RequestContext, @Param('id', ParseUUIDPipe) id: string) {
     return this.tenant.run(ctx, async (tx) => {
-      const [row] = await tx.select().from(clients).where(and(eq(clients.id, id), isNull(clients.deletedAt)));
+      const [row] = await tx
+        .select()
+        .from(clients)
+        .where(and(eq(clients.id, id), isNull(clients.deletedAt), ownClientsCondition(ctx, clients.id)));
       if (!row) throw notFound('Cliente');
       return row;
     });

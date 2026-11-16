@@ -8,11 +8,15 @@ import { AllExceptionsFilter } from './core/errors';
 import { FeaturesService } from './core/features.service';
 import { SessionService } from './core/session.service';
 import { TenantService } from './core/tenant.service';
+import { AgendaController } from './modules/agenda.controller';
 import { AuthController } from './modules/auth.controller';
 import { ClientsController } from './modules/clients.controller';
+import { FinanceController } from './modules/finance.controller';
 import { OrganizationController } from './modules/organization.controller';
+import { PetsController } from './modules/pets.controller';
 import { SaasController } from './modules/saas.controller';
 import { TeamController } from './modules/team.controller';
+import { TrainingController } from './modules/training.controller';
 
 @Controller('health')
 class HealthController {
@@ -28,7 +32,18 @@ class HealthController {
     DbModule,
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 60_000, limit: 60 }], skipIf: () => process.env.NODE_ENV === 'test' }),
   ],
-  controllers: [HealthController, AuthController, ClientsController, TeamController, OrganizationController, SaasController],
+  controllers: [
+    HealthController,
+    AuthController,
+    ClientsController,
+    PetsController,
+    TrainingController,
+    AgendaController,
+    FinanceController,
+    TeamController,
+    OrganizationController,
+    SaasController,
+  ],
   providers: [
     SessionService,
     TenantService,

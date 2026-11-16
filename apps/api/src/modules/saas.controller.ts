@@ -81,8 +81,8 @@ export class SaasController {
           lastPaymentAt: subscriptions.lastPaymentAt,
           lastPaymentNote: subscriptions.lastPaymentNote,
         },
-        users: sql<number>`(select count(*)::int from ${memberships} m where m.organization_id = ${organizations.id} and m.active)`,
-        clients: sql<number>`(select count(*)::int from ${clients} c where c.organization_id = ${organizations.id} and c.deleted_at is null)`,
+        users: sql<number>`(select count(*)::int from ${memberships} m where m.organization_id = "organizations"."id" and m.active)`,
+        clients: sql<number>`(select count(*)::int from ${clients} c where c.organization_id = "organizations"."id" and c.deleted_at is null)`,
       })
       .from(organizations)
       .leftJoin(subscriptions, eq(subscriptions.organizationId, organizations.id))

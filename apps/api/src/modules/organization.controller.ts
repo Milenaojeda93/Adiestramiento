@@ -2,6 +2,7 @@ import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { auditLogs, branches, organizations, plans, subscriptions } from '@adiestra/db';
 import { and, asc, desc, eq, lt } from 'drizzle-orm';
 import { z } from 'zod';
+import { policiesSchema } from '@adiestra/shared';
 import { Ctx, RequestContext, RequirePermissions } from '../core/context';
 import { FeaturesService } from '../core/features.service';
 import { TenantService } from '../core/tenant.service';
@@ -52,6 +53,19 @@ export class OrganizationController {
       const [before] = await tx.select().from(organizations);
       const [row] = await tx.update(organizations).set(input).where(eq(organizations.id, ctx.org!.id)).returning();
       await this.tenant.audit(tx, ctx, { action: 'organization.update', entity: 'organization', entityId: row.id, before, after: row });
+      return row;
+    });
+  }
+
+  /** Políticas de la empresa: ausencias y anticipación para cancelar. */
+  @Patch('organization/policies')
+  @RequirePermissions('settings:update')
+  policies(@Ctx() ctx: RequestContext, @Body() body: unknown) {
+    const input = parse(policiesSchema, body);
+    return this.tenant.run(ctx, async (tx) => {
+      const [before] = await tx.select({ noShowConsumes: organizations.noShowConsumes, cancelHours: organizations.cancelHours }).from(organizations);
+      const [row] = await tx.update(organizations).set(input).where(eq(organizations.id, ctx.org!.id)).returning();
+      await this.tenant.audit(tx, ctx, { action: 'organization.policies', entity: 'organization', entityId: row.id, before, after: input });
       return row;
     });
   }
