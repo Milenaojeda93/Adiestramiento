@@ -8,6 +8,7 @@ import useSWRInfinite from 'swr/infinite';
 import { Alert, Badge, Button, Card, EmptyState, Modal, PageHeader, TextArea, TextInput, cx } from '@/components/ui';
 import { api, ApiError, fetcher } from '@/lib/api';
 import { fmtDate } from '@/lib/format';
+import { NewPetForm } from '@/components/forms';
 import { useMe } from '@/lib/me';
 import type { Client, Page } from '@/lib/types';
 
@@ -35,7 +36,7 @@ function waLink(n: string) {
   return `https://wa.me/${intl}`;
 }
 
-function ClientForm({ initial, onSaved, onCancel, editingId }: { initial: Form; onSaved: () => void; onCancel: () => void; editingId?: string }) {
+function ClientForm({ initial, onSaved, onCancel, editingId }: { initial: Form; onSaved: (c: Client) => void; onCancel: () => void; editingId?: string }) {
   const [form, setForm] = useState(initial);
   const [error, setError] = useState<ApiError | null>(null);
   const [saving, setSaving] = useState(false);
@@ -55,8 +56,8 @@ function ClientForm({ initial, onSaved, onCancel, editingId }: { initial: Form; 
       notes: form.notes || null,
     };
     try {
-      await api(editingId ? `/clients/${editingId}` : '/clients', { method: editingId ? 'PATCH' : 'POST', body });
-      onSaved();
+      const saved = await api<Client>(editingId ? `/clients/${editingId}` : '/clients', { method: editingId ? 'PATCH' : 'POST', body });
+      onSaved(saved);
     } catch (err) {
       setError(err as ApiError);
     } finally {
@@ -86,7 +87,7 @@ function ClientForm({ initial, onSaved, onCancel, editingId }: { initial: Form; 
           Cancelar
         </Button>
         <Button type="submit" loading={saving}>
-          {editingId ? 'Guardar cambios' : 'Registrar cliente'}
+          {editingId ? 'Guardar cambios' : 'Siguiente: registrar mascota'}
         </Button>
       </div>
     </form>
@@ -100,7 +101,7 @@ function ClientesInner() {
   const [search, setSearch] = useState(params.get('q') ?? '');
   const [term, setTerm] = useState(params.get('q') ?? '');
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE' | 'ALL'>('ACTIVE');
-  const [modal, setModal] = useState<null | { mode: 'new' } | { mode: 'edit'; client: Client }>(params.get('nuevo') ? { mode: 'new' } : null);
+  const [modal, setModal] = useState<null | { mode: 'new' } | { mode: 'edit'; client: Client } | { mode: 'pet'; client: Client; fresh?: boolean }>(params.get('nuevo') ? { mode: 'new' } : null);
   const [notice, setNotice] = useState<string | null>(null);
   const ro = me.organization?.readOnly;
 
@@ -151,7 +152,7 @@ function ClientesInner() {
         actions={
           can('clients:create') && !ro ? (
             <Button onClick={() => setModal({ mode: 'new' })}>
-              <Plus size={16} aria-hidden /> Nuevo cliente
+              <Plus size={16} aria-hidden /> Nuevo propietario
             </Button>
           ) : null
         }
@@ -266,14 +267,21 @@ function ClientesInner() {
                       <td className="px-2 py-3 text-[#44403c]">{c.city ?? '—'}</td>
                       <td className="px-2 py-3 text-[#44403c]">{fmtDate(c.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
-                        {can('clients:update') && !ro && (
+                        {!ro && (
                           <div className="flex justify-end gap-1">
+                            {can('pets:create') && c.status === 'ACTIVE' && (
+                              <Button variant="ghost" className="h-9 px-3 text-[13px] text-brand" onClick={() => setModal({ mode: 'pet', client: c })}>
+                                <Plus size={14} aria-hidden /> Mascota
+                              </Button>
+                            )}
+                            {can('clients:update') && (<>
                             <Button variant="ghost" className="h-9 px-3 text-[13px]" onClick={() => setModal({ mode: 'edit', client: c })}>
                               Editar
                             </Button>
                             <Button variant="ghost" className="h-9 px-3 text-[13px] text-muted" onClick={() => toggleStatus(c)}>
                               {c.status === 'ACTIVE' ? 'Desactivar' : 'Reactivar'}
                             </Button>
+                            </>)}
                           </div>
                         )}
                       </td>
@@ -296,19 +304,58 @@ function ClientesInner() {
         )}
       </Card>
 
-      <Modal open={!!modal} onClose={close} title={modal?.mode === 'edit' ? 'Editar cliente' : 'Nuevo cliente'}>
-        {modal && (
+      <Modal
+        open={!!modal}
+        onClose={() => {
+          if (modal?.mode === 'pet') mutate();
+          close();
+        }}
+        title={modal?.mode === 'edit' ? 'Editar propietario' : modal?.mode === 'pet' ? (modal.fresh ? `Paso 2 de 2 · Mascota de ${modal.client.firstName}` : `Nueva mascota de ${modal.client.firstName} ${modal.client.lastName}`) : 'Paso 1 de 2 · Nuevo propietario'}
+      >
+        {modal && modal.mode !== 'pet' && (
           <ClientForm
             key={modal.mode === 'edit' ? modal.client.id : 'new'}
             initial={modal.mode === 'edit' ? toForm(modal.client) : EMPTY}
             editingId={modal.mode === 'edit' ? modal.client.id : undefined}
             onCancel={close}
-            onSaved={() => {
-              setNotice(modal.mode === 'edit' ? 'Cambios guardados.' : 'Cliente registrado.');
-              close();
+            onSaved={(c) => {
               mutate();
+              if (modal.mode === 'edit') {
+                setNotice('Cambios guardados.');
+                close();
+              } else if (can('pets:create')) {
+                setModal({ mode: 'pet', client: c, fresh: true });
+              } else {
+                setNotice('Propietario registrado.');
+                close();
+              }
             }}
           />
+        )}
+        {modal?.mode === 'pet' && (
+          <>
+            {modal.fresh && (
+              <Alert tone="green">
+                {modal.client.firstName} {modal.client.lastName} quedó registrado. Ahora cargá su mascota.
+              </Alert>
+            )}
+            <div className={modal.fresh ? 'mt-4' : ''}>
+              <NewPetForm
+                ownerId={modal.client.id}
+                ownerLabel={`${modal.client.firstName} ${modal.client.lastName}`}
+                cancelLabel={modal.fresh ? 'Omitir por ahora' : 'Cancelar'}
+                onCancel={() => {
+                  if (modal.fresh) setNotice('Propietario registrado. Podés agregarle mascotas desde su ficha.');
+                  close();
+                }}
+                onDone={() => {
+                  const id = modal.client.id;
+                  close();
+                  router.push(`/clientes/${id}`);
+                }}
+              />
+            </div>
+          </>
         )}
       </Modal>
     </>

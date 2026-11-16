@@ -116,7 +116,7 @@ function MascotasInner() {
         )}
       </Card>
       <Modal open={creating} onClose={() => setCreating(false)} title="Nueva mascota">
-        {creating && <NewPetForm onCancel={() => setCreating(false)} onDone={(id) => router.push(`/mascotas/${id}`)} />}
+        {creating && <NewPetForm onCancel={() => setCreating(false)} onDone={(id) => (id ? router.push(`/mascotas/${id}`) : setCreating(false))} />}
       </Modal>
     </>
   );

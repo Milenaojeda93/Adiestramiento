@@ -86,8 +86,11 @@ export const petSchema = z.object({
   alerts: z.array(z.string().trim().min(1).max(60)).max(10).default([]),
   /** Al crear: el propietario titular. */
   ownerClientId: uuid.optional(),
+  /** Al crear se pueden cargar salud y conducta en el mismo paso. */
+  health: petHealthSchema.optional(),
+  behavior: petBehaviorSchema.optional(),
 });
-export const petUpdateSchema = petSchema.omit({ ownerClientId: true }).partial().extend({
+export const petUpdateSchema = petSchema.omit({ ownerClientId: true, health: true, behavior: true }).partial().extend({
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
   health: petHealthSchema.optional(),
   behavior: petBehaviorSchema.optional(),

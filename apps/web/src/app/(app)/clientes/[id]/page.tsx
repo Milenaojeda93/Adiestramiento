@@ -189,7 +189,7 @@ export default function ClientePage() {
       </Card>
 
       <Modal open={modal === 'pet'} onClose={() => setModal(null)} title="Nueva mascota">
-        {modal === 'pet' && <NewPetForm ownerId={client.id} ownerLabel={name} onCancel={() => setModal(null)} onDone={(pid) => router.push(`/mascotas/${pid}`)} />}
+        {modal === 'pet' && <NewPetForm ownerId={client.id} ownerLabel={name} onCancel={() => setModal(null)} onDone={() => { setModal(null); refreshPets(); }} />}
       </Modal>
       <Modal open={modal === 'pay'} onClose={() => setModal(null)} title="Registrar pago">
         {modal === 'pay' && account && (
