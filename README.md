@@ -74,11 +74,12 @@ También podés crear una empresa nueva desde http://localhost:3000/crear-cuenta
 pnpm test
 ```
 
-Usa una base separada (`adiestra_test`) que se recrea en cada corrida. Las 19 pruebas cubren:
+Usa una base separada (`adiestra_test`) que se recrea en cada corrida. Las 40 pruebas (19 de Sprint 1 + 21 de operación) cubren:
 
 - **Aislamiento entre empresas:** listados, búsqueda, lectura/edición por id ajeno, `organizationId` falsificado, cambio de empresa, roles, usuarios y auditoría.
 - **RLS directo en PostgreSQL:** sin empresa fijada no se ve nada; no se puede leer, editar ni insertar en otra empresa; la app no puede leer hashes de contraseña ni sesiones, ni borrar auditoría.
 - **Permisos:** contraseña temporal obligatoria, alcance de cada rol, no quedarse sin administrador, bloqueo tras 5 intentos fallidos, protección CSRF por origen.
+- **Operación (Sprints 2–6):** alcance del entrenador a sus mascotas, último responsable protegido, conflictos de agenda y horario laboral, consumo y reversión del paquete, política de ausencias, cuotas y pagos (imputación, sobrepago, anulación, numeración de recibos), y RLS en las 22 tablas de empresa.
 - **Plataforma:** límite de entrenadores por plan, empresa suspendida en solo lectura, pago manual de suscripción, modo soporte auditado y de solo lectura.
 
 ## Variables de entorno de la API
