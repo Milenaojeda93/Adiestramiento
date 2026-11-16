@@ -1,0 +1,15 @@
+{
+  "name": "adiestra",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @adiestra/shared build && pnpm --filter @adiestra/db build && pnpm --parallel --filter @adiestra/api --filter @adiestra/web dev",
+    "db:migrate": "pnpm --filter @adiestra/db build && pnpm --filter @adiestra/db migrate",
+    "db:seed": "pnpm --filter @adiestra/db seed",
+    "db:seed:demo": "pnpm --filter @adiestra/db seed -- --demo",
+    "test": "pnpm --filter @adiestra/api test",
+    "typecheck": "pnpm -r exec tsc --noEmit"
+  }
+}
