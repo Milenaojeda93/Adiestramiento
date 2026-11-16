@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardList, Home, LogOut, Menu, Settings, ShieldCheck, Users, UserRound } from 'lucide-react';
+import { CalendarDays, ClipboardList, Clock3, Home, LogOut, Menu, PawPrint, Settings, ShieldCheck, Tag, Target, Users, UserRound, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { FormEvent, ReactNode, useState } from 'react';
@@ -19,11 +19,32 @@ interface NavItem {
 
 /** Solo módulos ya construidos: nada en el menú sin funcionamiento real detrás. */
 const NAV: { group: string; items: NavItem[] }[] = [
-  { group: 'Inicio', items: [{ href: '/inicio', label: 'Inicio', icon: Home }] },
-  { group: 'Clientes', items: [{ href: '/clientes', label: 'Propietarios', icon: UserRound, permission: 'clients:read' }] },
+  {
+    group: 'Inicio',
+    items: [
+      { href: '/inicio', label: 'Inicio', icon: Home },
+      { href: '/mi-dia', label: 'Mi día', icon: Clock3, permission: 'sessions:create' },
+    ],
+  },
+  { group: 'Operación', items: [{ href: '/agenda', label: 'Agenda', icon: CalendarDays, permission: 'agenda:read' }] },
+  {
+    group: 'Clientes',
+    items: [
+      { href: '/clientes', label: 'Propietarios', icon: UserRound, permission: 'clients:read' },
+      { href: '/mascotas', label: 'Mascotas', icon: PawPrint, permission: 'pets:read' },
+    ],
+  },
+  {
+    group: 'Entrenamiento',
+    items: [
+      { href: '/programas', label: 'Programas', icon: Target, permission: 'programs:read' },
+      { href: '/servicios', label: 'Servicios', icon: Tag, permission: 'services:read' },
+    ],
+  },
   {
     group: 'Gestión',
     items: [
+      { href: '/cobros', label: 'Cobros y egresos', icon: Wallet, permission: 'finance:read' },
       { href: '/equipo', label: 'Equipo y roles', icon: Users, permission: 'users:read' },
       { href: '/auditoria', label: 'Auditoría', icon: ClipboardList, permission: 'audit:read' },
       { href: '/configuracion', label: 'Configuración', icon: Settings, permission: 'settings:read' },
@@ -96,7 +117,7 @@ export function AppShell({ children, subscription }: { children: ReactNode; subs
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-60 shrink-0 flex-col gap-5 border-r border-line bg-white px-3.5 py-5 lg:flex">
+      <aside className="hidden w-60 shrink-0 print:hidden flex-col gap-5 border-r border-line bg-white px-3.5 py-5 lg:flex">
         <div className="px-2">
           <Logo subtitle={me.organization?.name} />
         </div>
@@ -116,7 +137,7 @@ export function AppShell({ children, subscription }: { children: ReactNode; subs
 
       <div className="flex min-w-0 flex-1 flex-col">
         {me.impersonating && (
-          <div className="flex flex-wrap items-center justify-between gap-2 bg-ink px-6 py-2 text-sm text-white">
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-ink px-6 py-2 print:hidden text-sm text-white">
             <span className="flex items-center gap-2">
               <ShieldCheck size={16} aria-hidden /> Modo soporte en {me.organization?.name}: solo lectura, todo queda auditado.
             </span>
@@ -125,7 +146,7 @@ export function AppShell({ children, subscription }: { children: ReactNode; subs
             </button>
           </div>
         )}
-        <header className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-8">
+        <header className="flex flex-wrap items-center gap-3 border-b print:hidden border-line bg-white px-4 py-3 sm:px-8">
           <button type="button" className="flex h-10 w-10 items-center justify-center rounded-lg border border-line lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú">
             <Menu size={18} aria-hidden />
           </button>

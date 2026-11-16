@@ -6,7 +6,8 @@
 import { eq } from 'drizzle-orm';
 import { createDb } from './index';
 import { hashPassword, provisionOrganization, seedCatalog } from './provision';
-import { clients, users } from './schema';
+import { seedDemoData } from './demo';
+import { clients, memberships, users } from './schema';
 
 const DEMO_CLIENTS = [
   ['Marta', 'Giménez', '3456789', '+595981234567', 'Asunción'],
@@ -43,7 +44,9 @@ async function main() {
     const email = 'demo@adiestra.local';
     const [exists] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
     if (exists) {
-      console.log('La empresa demo ya existe.');
+      const [m] = await db.select({ orgId: memberships.organizationId }).from(memberships).where(eq(memberships.userId, exists.id));
+      if (m && (await seedDemoData(db, m.orgId, exists.id))) console.log('Datos de demostración cargados.');
+      else console.log('La empresa demo ya existe.');
     } else {
       const password = process.env.DEMO_PASSWORD ?? 'Demo12345678';
       const { organization, user } = await provisionOrganization(db, {
@@ -67,6 +70,7 @@ async function main() {
           createdBy: user.id,
         })),
       );
+      await seedDemoData(db, organization.id, user.id);
       console.log(`Empresa demo creada. Ingresá con ${email}${process.env.DEMO_PASSWORD ? ' y la contraseña de DEMO_PASSWORD' : ' / ' + password}`);
     }
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { MessageCircle, Plus } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import useSWRInfinite from 'swr/infinite';
@@ -243,9 +244,9 @@ function ClientesInner() {
                     <tr key={c.id} className="border-t border-line-soft">
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-semibold">
+                          <Link href={`/clientes/${c.id}`} className="font-semibold text-brand hover:text-brand-dark">
                             {c.firstName} {c.lastName}
-                          </span>
+                          </Link>
                           {c.status === 'INACTIVE' && <Badge>Inactivo</Badge>}
                           {c.isDemo && <Badge tone="blue">Demo</Badge>}
                         </div>

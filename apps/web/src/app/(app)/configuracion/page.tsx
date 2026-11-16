@@ -6,9 +6,10 @@ import { Alert, Badge, Button, Card, PageHeader, TextInput } from '@/components/
 import { api, ApiError, fetcher } from '@/lib/api';
 import { fmtDate } from '@/lib/format';
 import { useMe } from '@/lib/me';
+import { PoliciesCard, SkillsCard, WorkingHoursCard } from './extras';
 
 interface OrgData {
-  organization: { name: string; legalName: string | null; ruc: string | null; phone: string | null; email: string | null; address: string | null; currency: string; timezone: string };
+  organization: { name: string; legalName: string | null; ruc: string | null; phone: string | null; email: string | null; address: string | null; currency: string; timezone: string; noShowConsumes: boolean; cancelHours: number };
   subscription: { status: string; plan: string; trialEndsAt: string | null; currentPeriodEnd: string | null } | null;
   branches: { id: string; name: string; isDefault: boolean; address: string | null }[];
   features: Record<string, { enabled: boolean; limit: number | null }>;
@@ -136,6 +137,13 @@ export default function ConfiguracionPage() {
             <p className="text-xs text-muted">Moneda: {data.organization.currency} · Zona horaria: {data.organization.timezone}</p>
           </Card>
         </div>
+      </div>
+      <div className="grid items-start gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+        <div className="flex flex-col gap-4">
+          <PoliciesCard noShowConsumes={data.organization.noShowConsumes} cancelHours={data.organization.cancelHours} editable={editable} onSaved={() => mutate()} />
+          <SkillsCard editable={editable} />
+        </div>
+        <WorkingHoursCard editable={editable} />
       </div>
     </>
   );

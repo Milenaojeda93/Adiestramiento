@@ -30,3 +30,4 @@ export async function withTenant<T>(db: Db, organizationId: string, fn: (tx: Tx)
 }
 export * from './provision';
 export type { Pool } from 'pg';
+export * from './demo';
